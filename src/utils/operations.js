@@ -1,18 +1,25 @@
 // Generació d'operacions matemàtiques
 
-// Quadrats perfectes per a les arrels quadrades
-const QUADRATS_PERFECTES = [
-  1, 4, 9, 16, 25, 36, 49, 64, 81, 100,
-  121, 144, 169, 196, 225, 256, 289, 324, 361, 400,
-  441, 484, 529, 576, 625, 676, 729, 784, 841, 900,
-  961, 1024, 1089, 1156, 1225, 1296, 1369, 1444, 1521, 1600,
-  1681, 1764, 1849, 1936, 2025, 2116, 2209, 2304, 2401, 2500,
-  2601, 2704, 2809, 2916, 3025, 3136, 3249, 3364, 3481, 3600,
-  3721, 3844, 3969, 4096, 4225, 4356, 4489, 4624, 4761, 4900,
-  5041, 5184, 5329, 5476, 5625, 5776, 5929, 6084, 6241, 6400,
-  6561, 6724, 6889, 7056, 7225, 7396, 7569, 7744, 7921, 8100,
-  8281, 8464, 8649, 8836, 9025, 9216, 9409, 9604, 9801, 10000
-];
+/**
+ * Genera els quadrats perfectes dins d'un rang
+ * @param {number} min - Valor mínim
+ * @param {number} max - Valor màxim
+ * @returns {Array} Array de quadrats perfectes
+ */
+function generarQuadratsPerfectes(min, max) {
+  const quadrats = [];
+  // Trobar la primera arrel que dona un quadrat >= min
+  let arrel = Math.ceil(Math.sqrt(min));
+  let quadrat = arrel * arrel;
+
+  while (quadrat <= max) {
+    quadrats.push(quadrat);
+    arrel++;
+    quadrat = arrel * arrel;
+  }
+
+  return quadrats;
+}
 
 /**
  * Genera un número aleatori amb les xifres i decimals especificats
@@ -120,7 +127,7 @@ function generarDivisio(xifres1, xifres2, decimalsResultat) {
 export function obtenirQuadratsPerfectes(xifres) {
   const min = xifres === 1 ? 1 : Math.pow(10, xifres - 1);
   const max = Math.pow(10, xifres) - 1;
-  return QUADRATS_PERFECTES.filter(n => n >= min && n <= max);
+  return generarQuadratsPerfectes(min, max);
 }
 
 /**
@@ -132,8 +139,8 @@ function generarArrel(xifres, usats = []) {
   const candidats = obtenirQuadratsPerfectes(xifres);
 
   if (candidats.length === 0) {
-    // Si no hi ha candidats, usar el primer quadrat perfecte disponible
-    const radicand = QUADRATS_PERFECTES[0];
+    // Si no hi ha candidats (no hauria de passar), usar 1
+    const radicand = 1;
     return {
       operand1: radicand,
       operand2: null,

@@ -26,20 +26,12 @@ function ResultModal({ resultat, nivell, config, onGuardar, onTancar, onVeureRan
   };
 
   const handleGuardar = () => {
-    console.log('handleGuardar cridat amb nom:', nom);
-    if (!nom.trim()) {
-      console.log('Nom buit, retornant');
-      return;
-    }
+    if (!nom.trim()) return;
 
     const pos = onGuardar(nom);
-    console.log('Posició retornada:', pos);
     if (pos > 0) {
       setPosicio(pos);
       setGuardat(true);
-      console.log('Guardat correctament a posició:', pos);
-    } else {
-      console.log('No s\'ha pogut guardar, pos <= 0');
     }
   };
 
@@ -96,52 +88,74 @@ function ResultModal({ resultat, nivell, config, onGuardar, onTancar, onVeureRan
 
           {/* Guardar al ranking */}
           {!guardat ? (
-            <div className="space-y-3">
-              <div className="text-sm font-medium text-gray-700 text-center">
-                Vols guardar la teva puntuació?
+            <div className="space-y-4">
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                <div className="text-sm font-medium text-blue-800 text-center mb-3">
+                  Guarda la teva puntuació al ranking!
+                </div>
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    value={nom}
+                    onChange={(e) => setNom(e.target.value)}
+                    placeholder="El teu nom..."
+                    maxLength={20}
+                    className="flex-1 px-3 py-2 border border-blue-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    onKeyDown={(e) => e.key === 'Enter' && handleGuardar()}
+                  />
+                  <button
+                    onClick={handleGuardar}
+                    disabled={!nom.trim()}
+                    className="px-6 py-2 bg-blue-500 hover:bg-blue-600 disabled:bg-gray-300 text-white font-semibold rounded-lg transition-colors"
+                  >
+                    Guardar
+                  </button>
+                </div>
               </div>
-              <div className="flex gap-2">
-                <input
-                  type="text"
-                  value={nom}
-                  onChange={(e) => setNom(e.target.value)}
-                  placeholder="El teu nom..."
-                  maxLength={20}
-                  className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                />
+
+              {/* Botó secundari per sortir sense guardar */}
+              <div className="flex gap-3">
                 <button
-                  onClick={handleGuardar}
-                  disabled={!nom.trim()}
-                  className="px-4 py-2 bg-blue-500 hover:bg-blue-600 disabled:bg-gray-300 text-white font-medium rounded-lg transition-colors"
+                  onClick={onVeureRanking}
+                  className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 font-medium rounded-lg hover:bg-gray-50 transition-colors flex items-center justify-center gap-2"
                 >
-                  Guardar
+                  <span>🏆</span>
+                  <span>Ranking</span>
+                </button>
+                <button
+                  onClick={onTancar}
+                  className="flex-1 px-4 py-2 text-gray-500 font-medium rounded-lg hover:bg-gray-100 transition-colors"
+                >
+                  Sortir sense guardar
                 </button>
               </div>
             </div>
           ) : (
-            <div className="bg-green-50 border border-green-200 rounded-lg p-4 text-center">
-              <div className="text-green-600 font-medium">
-                Guardat! Ets el #{posicio} del ranking {nivell.text}
+            <div className="space-y-4">
+              <div className="bg-green-50 border border-green-200 rounded-lg p-4 text-center">
+                <div className="text-green-600 font-medium">
+                  Guardat! Ets el #{posicio} del ranking {nivell.text}
+                </div>
+              </div>
+
+              {/* Botons després de guardar */}
+              <div className="flex gap-3">
+                <button
+                  onClick={onVeureRanking}
+                  className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 font-medium rounded-lg hover:bg-gray-50 transition-colors flex items-center justify-center gap-2"
+                >
+                  <span>🏆</span>
+                  <span>Veure Ranking</span>
+                </button>
+                <button
+                  onClick={onTancar}
+                  className="flex-1 px-4 py-2 bg-gray-800 text-white font-medium rounded-lg hover:bg-gray-900 transition-colors"
+                >
+                  Continuar
+                </button>
               </div>
             </div>
           )}
-
-          {/* Botons */}
-          <div className="flex gap-3 pt-2">
-            <button
-              onClick={onVeureRanking}
-              className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 font-medium rounded-lg hover:bg-gray-50 transition-colors flex items-center justify-center gap-2"
-            >
-              <span>🏆</span>
-              <span>Ranking</span>
-            </button>
-            <button
-              onClick={onTancar}
-              className="flex-1 px-4 py-2 bg-gray-800 text-white font-medium rounded-lg hover:bg-gray-900 transition-colors"
-            >
-              Tancar
-            </button>
-          </div>
         </div>
       </div>
     </div>
