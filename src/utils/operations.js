@@ -113,15 +113,23 @@ function generarDivisio(xifres1, xifres2, decimalsResultat) {
 }
 
 /**
+ * Obté els quadrats perfectes disponibles per un nombre de xifres
+ * @param {number} xifres - Xifres del radicand
+ * @returns {Array} Array de quadrats perfectes
+ */
+export function obtenirQuadratsPerfectes(xifres) {
+  const min = xifres === 1 ? 1 : Math.pow(10, xifres - 1);
+  const max = Math.pow(10, xifres) - 1;
+  return QUADRATS_PERFECTES.filter(n => n >= min && n <= max);
+}
+
+/**
  * Genera una operació d'arrel quadrada (només quadrats perfectes)
  * @param {number} xifres - Xifres del radicand
+ * @param {Array} usats - Array de radicands ja usats (per evitar repeticions)
  */
-function generarArrel(xifres) {
-  const min = Math.pow(10, xifres - 1);
-  const max = Math.pow(10, xifres) - 1;
-
-  // Filtrar quadrats perfectes segons xifres desitjades
-  const candidats = QUADRATS_PERFECTES.filter(n => n >= min && n <= max);
+function generarArrel(xifres, usats = []) {
+  const candidats = obtenirQuadratsPerfectes(xifres);
 
   if (candidats.length === 0) {
     // Si no hi ha candidats, usar el primer quadrat perfecte disponible
@@ -135,7 +143,12 @@ function generarArrel(xifres) {
     };
   }
 
-  const radicand = candidats[Math.floor(Math.random() * candidats.length)];
+  // Filtrar els que ja s'han usat
+  const disponibles = candidats.filter(n => !usats.includes(n));
+
+  // Si tots s'han usat, permetre repeticions
+  const seleccio = disponibles.length > 0 ? disponibles : candidats;
+  const radicand = seleccio[Math.floor(Math.random() * seleccio.length)];
 
   return {
     operand1: radicand,
@@ -147,9 +160,18 @@ function generarArrel(xifres) {
 }
 
 /**
+ * Obté el màxim d'operacions úniques possibles per arrels quadrades
+ * @param {number} xifres - Xifres del radicand
+ * @returns {number}
+ */
+export function getMaxOperacionsArrels(xifres) {
+  return obtenirQuadratsPerfectes(xifres).length;
+}
+
+/**
  * Genera un array d'operacions segons la configuració
  * @param {Object} config - Configuració de les operacions
- * @returns {Array} Array d'operacions
+ * @returns {Object} { operacions, avis }
  */
 export function generarOperacions(config) {
   const {
@@ -163,6 +185,22 @@ export function generarOperacions(config) {
 
   const operacions = [];
   const decimals = teDecimals ? numDecimals : 0;
+  let avis = null;
+
+  // Per arrels, controlar els usats per evitar repeticions
+  const arrelUsats = [];
+
+  // Comprovar si hi ha prou operacions úniques per arrels
+  if (tipus === 'arrels') {
+    const maxUniques = getMaxOperacionsArrels(xifres1);
+    if (numOperacions > maxUniques) {
+      avis = {
+        tipus: 'limit_arrels',
+        missatge: `Amb ${xifres1} xifra${xifres1 > 1 ? 'es' : ''} només hi ha ${maxUniques} arrels quadrades possibles. Algunes es repetiran.`,
+        maxUniques
+      };
+    }
+  }
 
   for (let i = 0; i < numOperacions; i++) {
     let operacio;
@@ -181,7 +219,8 @@ export function generarOperacions(config) {
         operacio = generarDivisio(xifres1, xifres2, decimals);
         break;
       case 'arrels':
-        operacio = generarArrel(xifres1);
+        operacio = generarArrel(xifres1, arrelUsats);
+        arrelUsats.push(operacio.operand1);
         break;
       default:
         operacio = generarSuma(xifres1, xifres2, decimals);
@@ -195,7 +234,7 @@ export function generarOperacions(config) {
     });
   }
 
-  return operacions;
+  return { operacions, avis };
 }
 
 /**

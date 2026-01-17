@@ -88,12 +88,20 @@ function OperationRow({ operacio, onChange, disabled, inputRef }) {
   );
 }
 
-function GameArea({ operacions, onRespostaChange, onRevisar, disabled, primerInputRef }) {
+function GameArea({ operacions, onRespostaChange, onRevisar, disabled, primerInputRef, avis }) {
   // Comprovar si hi ha almenys una resposta
   const hiHaRespostes = operacions.some(op => op.respostaUsuari.trim() !== '');
 
   return (
     <div className="p-4 sm:p-6 max-w-4xl mx-auto">
+      {/* Avís si hi ha limitacions */}
+      {avis && (
+        <div className="mb-4 p-3 bg-amber-50 border border-amber-200 rounded-lg flex items-start gap-2">
+          <span className="text-amber-500 flex-shrink-0">⚠️</span>
+          <p className="text-sm text-amber-700">{avis.missatge}</p>
+        </div>
+      )}
+
       {/* Llista d'operacions */}
       <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 sm:p-6 mb-6">
         <div className="space-y-1 sm:space-y-2">

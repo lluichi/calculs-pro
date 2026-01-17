@@ -39,6 +39,7 @@ function App() {
   const [temps, setTemps] = useState(0);
   const [tempsActiu, setTempsActiu] = useState(false);
   const [resultat, setResultat] = useState(null);
+  const [avis, setAvis] = useState(null);
 
   // Modals
   const [configObert, setConfigObert] = useState(false);
@@ -67,8 +68,9 @@ function App() {
 
   // Generar noves operacions
   const handleGenerar = useCallback(() => {
-    const novesOperacions = generarOperacions(config);
+    const { operacions: novesOperacions, avis: nouAvis } = generarOperacions(config);
     setOperacions(novesOperacions);
+    setAvis(nouAvis);
     setTemps(0);
     setTempsActiu(false);
     setAppState(AppState.JUGANT);
@@ -127,6 +129,7 @@ function App() {
   // Reiniciar joc
   const handleReiniciar = useCallback(() => {
     setOperacions([]);
+    setAvis(null);
     setTemps(0);
     setTempsActiu(false);
     setAppState(AppState.INICIAL);
@@ -161,6 +164,7 @@ function App() {
     // Si estem jugant, reiniciar
     if (appState === AppState.JUGANT || appState === AppState.REVISAT) {
       setOperacions([]);
+      setAvis(null);
       setTemps(0);
       setTempsActiu(false);
       setAppState(AppState.INICIAL);
@@ -211,6 +215,7 @@ function App() {
             onRevisar={handleRevisar}
             disabled={appState === AppState.REVISAT}
             primerInputRef={primerInputRef}
+            avis={avis}
           />
         )}
       </main>
