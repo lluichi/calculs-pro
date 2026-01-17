@@ -240,6 +240,7 @@ function App() {
       {rankingObert && (
         <RankingModal
           onTancar={() => setRankingObert(false)}
+          nivellInicial={nivell.nivell}
         />
       )}
 

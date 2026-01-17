@@ -74,8 +74,8 @@ function RankingEntry({ entry, posicio, onEsborrar }) {
   );
 }
 
-function RankingModal({ onTancar }) {
-  const [nivellActiu, setNivellActiu] = useState('facil');
+function RankingModal({ onTancar, nivellInicial = 'facil' }) {
+  const [nivellActiu, setNivellActiu] = useState(nivellInicial);
   const [rankings, setRankings] = useState({});
 
   // Carregar rankings
