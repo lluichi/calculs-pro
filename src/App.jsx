@@ -138,7 +138,11 @@ function App() {
 
   // Guardar al ranking
   const handleGuardarRanking = useCallback((nom) => {
-    if (!resultat || !nom.trim()) return null;
+    console.log('handleGuardarRanking cridat amb nom:', nom, 'resultat:', resultat);
+    if (!resultat || !nom.trim()) {
+      console.log('Retornant null - resultat o nom buits');
+      return null;
+    }
 
     const entrada = crearEntradaRanking({
       nom: nom.trim(),

@@ -26,12 +26,20 @@ function ResultModal({ resultat, nivell, config, onGuardar, onTancar, onVeureRan
   };
 
   const handleGuardar = () => {
-    if (!nom.trim()) return;
+    console.log('handleGuardar cridat amb nom:', nom);
+    if (!nom.trim()) {
+      console.log('Nom buit, retornant');
+      return;
+    }
 
     const pos = onGuardar(nom);
+    console.log('Posició retornada:', pos);
     if (pos > 0) {
       setPosicio(pos);
       setGuardat(true);
+      console.log('Guardat correctament a posició:', pos);
+    } else {
+      console.log('No s\'ha pogut guardar, pos <= 0');
     }
   };
 

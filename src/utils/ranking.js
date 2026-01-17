@@ -54,8 +54,10 @@ export function obtenirTotsRankings() {
  * @returns {Object} { posicio, esNou }
  */
 export function guardarRanking(entry) {
+  console.log('guardarRanking cridat amb:', entry);
   try {
     const key = RANKING_KEYS[entry.nivell];
+    console.log('Clau localStorage:', key);
     if (!key) {
       throw new Error(`Nivell no vàlid: ${entry.nivell}`);
     }
@@ -80,9 +82,11 @@ export function guardarRanking(entry) {
 
     // Guardar
     localStorage.setItem(key, JSON.stringify(ranking));
+    console.log('Ranking guardat a localStorage:', key, ranking);
 
     // Trobar la posició de la nova entrada
     const posicio = ranking.findIndex(r => r.id === entryCompleta.id) + 1;
+    console.log('Posició calculada:', posicio);
 
     return {
       posicio,
