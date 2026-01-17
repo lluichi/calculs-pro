@@ -83,9 +83,21 @@ export function calcularPuntuacio(resultat, config, tempsSegons) {
   // Factor per número d'operacions
   const factorOperacions = 1 + (config.numOperacions / 100);
 
-  // Factor de temps (temps base = 30 segons per operació)
-  const tempsBase = config.numOperacions * 30;
-  const factorTemps = Math.min(2, tempsBase / Math.max(tempsSegons, 1)); // Màxim x2, evitar divisió per 0
+  // Factor de temps millorat
+  // Temps esperat segons el tipus d'operació (en segons per operació)
+  const tempsEsperatPerOp = {
+    sumes: 8,
+    restes: 10,
+    multiplicacions: 15,
+    divisions: 20,
+    arrels: 6  // Les arrels són més ràpides si les saps
+  };
+  const tempsEsperat = config.numOperacions * (tempsEsperatPerOp[config.tipus] || 10);
+
+  // Fórmula: si fas el temps esperat, factor = 1. Més ràpid = més punts, més lent = menys punts
+  // Usem arrel quadrada per suavitzar i evitar factors massa extrems
+  const ratioTemps = tempsEsperat / Math.max(tempsSegons, 1);
+  const factorTemps = Math.min(3, Math.max(0.5, Math.sqrt(ratioTemps)));
 
   // Puntuació final
   const puntuacio = Math.round(
