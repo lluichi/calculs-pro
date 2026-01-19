@@ -255,7 +255,7 @@ export function generarOperacions(config) {
     if (numOperacions > maxUniques) {
       avis = {
         tipus: 'limit_operacions',
-        missatge: `Amb ${xifres1} xifra${xifres1 > 1 ? 'es' : ''} només hi ha ${maxUniques} arrels quadrades diferents. S'han generat ${maxUniques} operacions.`,
+        missatge: `Amb ${xifres1} ${xifres1 > 1 ? 'xifres' : 'xifra'} només hi ha ${maxUniques} arrels quadrades diferents. S'han generat ${maxUniques} operacions.`,
         maxUniques,
         generades: maxUniques
       };
