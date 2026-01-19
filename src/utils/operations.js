@@ -176,6 +176,36 @@ export function getMaxOperacionsArrels(xifres) {
 }
 
 /**
+ * Crea una clau única per identificar una operació
+ * @param {Object} op - Operació
+ * @returns {string} Clau única
+ */
+function getClauOperacio(op) {
+  if (op.operador === '√') {
+    return `√${op.operand1}`;
+  }
+  return `${op.operand1}${op.operador}${op.operand2}`;
+}
+
+/**
+ * Genera una operació segons el tipus
+ */
+function generarOperacioPerTipus(tipus, xifres1, xifres2, decimals) {
+  switch (tipus) {
+    case 'sumes':
+      return generarSuma(xifres1, xifres2, decimals);
+    case 'restes':
+      return generarResta(xifres1, xifres2, decimals);
+    case 'multiplicacions':
+      return generarMultiplicacio(xifres1, xifres2, decimals);
+    case 'divisions':
+      return generarDivisio(xifres1, xifres2, decimals);
+    default:
+      return generarSuma(xifres1, xifres2, decimals);
+  }
+}
+
+/**
  * Genera un array d'operacions segons la configuració
  * @param {Object} config - Configuració de les operacions
  * @returns {Object} { operacions, avis }
@@ -193,52 +223,74 @@ export function generarOperacions(config) {
   const operacions = [];
   const decimals = teDecimals ? numDecimals : 0;
   let avis = null;
+  const operacionsUsades = new Set();
+  const MAX_INTENTS = 50; // Màxim d'intents per generar una operació única
 
-  // Per arrels, controlar els usats per evitar repeticions
-  const arrelUsats = [];
-
-  // Comprovar si hi ha prou operacions úniques per arrels
+  // Per arrels, obtenir totes les opcions possibles
   if (tipus === 'arrels') {
-    const maxUniques = getMaxOperacionsArrels(xifres1);
+    const quadratsPossibles = obtenirQuadratsPerfectes(xifres1);
+    const maxUniques = quadratsPossibles.length;
+
+    // Barrejar els quadrats perfectes per obtenir-los en ordre aleatori
+    const quadratsBarrejats = [...quadratsPossibles].sort(() => Math.random() - 0.5);
+
+    // Agafar només els que necessitem (o tots si en demanem més dels disponibles)
+    const numAGenerar = Math.min(numOperacions, maxUniques);
+
+    for (let i = 0; i < numAGenerar; i++) {
+      const radicand = quadratsBarrejats[i];
+      operacions.push({
+        id: i + 1,
+        operand1: radicand,
+        operand2: null,
+        operador: '√',
+        resultat: Math.sqrt(radicand),
+        decimalsResultat: 0,
+        respostaUsuari: '',
+        estat: 'pendent'
+      });
+    }
+
+    // Si hem demanat més operacions de les possibles, mostrar avís
     if (numOperacions > maxUniques) {
       avis = {
-        tipus: 'limit_arrels',
-        missatge: `Amb ${xifres1} xifra${xifres1 > 1 ? 'es' : ''} només hi ha ${maxUniques} arrels quadrades possibles. Algunes es repetiran.`,
-        maxUniques
+        tipus: 'limit_operacions',
+        missatge: `Amb ${xifres1} xifra${xifres1 > 1 ? 'es' : ''} només hi ha ${maxUniques} arrels quadrades diferents. S'han generat ${maxUniques} operacions.`,
+        maxUniques,
+        generades: maxUniques
       };
     }
-  }
+  } else {
+    // Per altres operacions (sumes, restes, multiplicacions, divisions)
+    let intentsGlobals = 0;
+    const maxIntentsGlobals = numOperacions * MAX_INTENTS;
 
-  for (let i = 0; i < numOperacions; i++) {
-    let operacio;
+    while (operacions.length < numOperacions && intentsGlobals < maxIntentsGlobals) {
+      const operacio = generarOperacioPerTipus(tipus, xifres1, xifres2, decimals);
+      const clau = getClauOperacio(operacio);
 
-    switch (tipus) {
-      case 'sumes':
-        operacio = generarSuma(xifres1, xifres2, decimals);
-        break;
-      case 'restes':
-        operacio = generarResta(xifres1, xifres2, decimals);
-        break;
-      case 'multiplicacions':
-        operacio = generarMultiplicacio(xifres1, xifres2, decimals);
-        break;
-      case 'divisions':
-        operacio = generarDivisio(xifres1, xifres2, decimals);
-        break;
-      case 'arrels':
-        operacio = generarArrel(xifres1, arrelUsats);
-        arrelUsats.push(operacio.operand1);
-        break;
-      default:
-        operacio = generarSuma(xifres1, xifres2, decimals);
+      if (!operacionsUsades.has(clau)) {
+        operacionsUsades.add(clau);
+        operacions.push({
+          id: operacions.length + 1,
+          ...operacio,
+          respostaUsuari: '',
+          estat: 'pendent'
+        });
+      }
+
+      intentsGlobals++;
     }
 
-    operacions.push({
-      id: i + 1,
-      ...operacio,
-      respostaUsuari: '',
-      estat: 'pendent' // pendent, correcte, incorrecte
-    });
+    // Si no hem pogut generar totes les operacions, mostrar avís
+    if (operacions.length < numOperacions) {
+      avis = {
+        tipus: 'limit_operacions',
+        missatge: `Amb la configuració actual només s'han pogut generar ${operacions.length} operacions diferents de ${numOperacions} sol·licitades.`,
+        maxUniques: operacions.length,
+        generades: operacions.length
+      };
+    }
   }
 
   return { operacions, avis };
