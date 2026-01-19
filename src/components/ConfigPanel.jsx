@@ -13,7 +13,7 @@ const XIFRES_OPTIONS = [1, 2, 3, 4, 5];
 const DECIMALS_OPTIONS = [1, 2, 3];
 const OPERACIONS_OPTIONS = [5, 10, 15, 20, 25, 30, 40, 50];
 
-function ConfigPanel({ config, onAplicar, onCancelar }) {
+function ConfigPanel({ config, onAplicar, onCancelar, onGenerar }) {
   const [localConfig, setLocalConfig] = useState(config);
   const nivell = calcularNivell(localConfig);
 
@@ -29,9 +29,13 @@ function ConfigPanel({ config, onAplicar, onCancelar }) {
     }));
   };
 
-  const handleSubmit = (e) => {
+  const handleGuardar = (e) => {
     e.preventDefault();
     onAplicar(localConfig);
+  };
+
+  const handleGenerar = () => {
+    onGenerar(localConfig);
   };
 
   // Per arrels, només es pot seleccionar xifres1
@@ -48,7 +52,7 @@ function ConfigPanel({ config, onAplicar, onCancelar }) {
         </div>
 
         {/* Formulari */}
-        <form onSubmit={handleSubmit} className="p-6 space-y-6">
+        <form onSubmit={handleGuardar} className="p-6 space-y-6">
           {/* Tipus d'operació */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -175,15 +179,22 @@ function ConfigPanel({ config, onAplicar, onCancelar }) {
             <button
               type="button"
               onClick={onCancelar}
-              className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 font-medium rounded-lg hover:bg-gray-50 transition-colors"
+              className="px-4 py-2 border border-gray-300 text-gray-700 font-medium rounded-lg hover:bg-gray-50 transition-colors"
             >
               Cancel·lar
             </button>
             <button
               type="submit"
+              className="flex-1 px-4 py-2 border border-blue-500 text-blue-600 font-medium rounded-lg hover:bg-blue-50 transition-colors"
+            >
+              Guardar
+            </button>
+            <button
+              type="button"
+              onClick={handleGenerar}
               className="flex-1 px-4 py-2 bg-blue-500 text-white font-medium rounded-lg hover:bg-blue-600 transition-colors"
             >
-              Aplicar
+              Generar
             </button>
           </div>
         </form>

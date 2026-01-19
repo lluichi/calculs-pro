@@ -156,7 +156,7 @@ function App() {
     return posicio;
   }, [resultat, config]);
 
-  // Aplicar nova configuració
+  // Aplicar nova configuració (només guardar, sense generar)
   const handleAplicarConfig = useCallback((novaConfig) => {
     setConfig(novaConfig);
     setConfigObert(false);
@@ -171,6 +171,28 @@ function App() {
       setResultat(null);
     }
   }, [appState]);
+
+  // Aplicar configuració i generar operacions immediatament
+  const handleGenerarDesdeConfig = useCallback((novaConfig) => {
+    setConfig(novaConfig);
+    setConfigObert(false);
+
+    // Generar operacions amb la nova configuració
+    const { operacions: novesOperacions, avis: nouAvis } = generarOperacions(novaConfig);
+    setOperacions(novesOperacions);
+    setAvis(nouAvis);
+    setTemps(0);
+    setTempsActiu(false);
+    setAppState(AppState.JUGANT);
+    setResultat(null);
+
+    // Focus al primer input
+    setTimeout(() => {
+      if (primerInputRef.current) {
+        primerInputRef.current.focus();
+      }
+    }, 100);
+  }, []);
 
   // Comptar correctes actuals
   const correctesActuals = operacions.filter(op => op.estat === 'correcte').length;
@@ -234,6 +256,7 @@ function App() {
           config={config}
           onAplicar={handleAplicarConfig}
           onCancelar={() => setConfigObert(false)}
+          onGenerar={handleGenerarDesdeConfig}
         />
       )}
 
