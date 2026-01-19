@@ -4,7 +4,9 @@ import { formatarTemps, getNomTipus } from '../utils/scoring';
 function ResultModal({ resultat, nivell, config, onGuardar, onTancar, onVeureRanking }) {
   const [nom, setNom] = useState('');
   const [guardat, setGuardat] = useState(false);
+  const [guardant, setGuardant] = useState(false);
   const [posicio, setPosicio] = useState(null);
+  const [error, setError] = useState(null);
 
   const percentatge = Math.round((resultat.correctes / resultat.total) * 100);
 
@@ -25,13 +27,25 @@ function ResultModal({ resultat, nivell, config, onGuardar, onTancar, onVeureRan
     return 'Continua practicant!';
   };
 
-  const handleGuardar = () => {
-    if (!nom.trim()) return;
+  const handleGuardar = async () => {
+    if (!nom.trim() || guardant) return;
 
-    const pos = onGuardar(nom);
-    if (pos > 0) {
-      setPosicio(pos);
-      setGuardat(true);
+    setGuardant(true);
+    setError(null);
+
+    try {
+      const pos = await onGuardar(nom);
+      if (pos > 0) {
+        setPosicio(pos);
+        setGuardat(true);
+      } else {
+        setError('No s\'ha pogut guardar. Torna-ho a provar.');
+      }
+    } catch (err) {
+      console.error('Error guardant:', err);
+      setError('Error de connexió. Torna-ho a provar.');
+    } finally {
+      setGuardant(false);
     }
   };
 
@@ -91,7 +105,7 @@ function ResultModal({ resultat, nivell, config, onGuardar, onTancar, onVeureRan
             <div className="space-y-4">
               <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
                 <div className="text-sm font-medium text-blue-800 text-center mb-3">
-                  Guarda la teva puntuació al ranking!
+                  Guarda la teva puntuació al ranking global!
                 </div>
                 <div className="flex gap-2">
                   <input
@@ -100,17 +114,23 @@ function ResultModal({ resultat, nivell, config, onGuardar, onTancar, onVeureRan
                     onChange={(e) => setNom(e.target.value)}
                     placeholder="El teu nom..."
                     maxLength={20}
-                    className="flex-1 px-3 py-2 border border-blue-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    disabled={guardant}
+                    className="flex-1 px-3 py-2 border border-blue-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-100"
                     onKeyDown={(e) => e.key === 'Enter' && handleGuardar()}
                   />
                   <button
                     onClick={handleGuardar}
-                    disabled={!nom.trim()}
+                    disabled={!nom.trim() || guardant}
                     className="px-6 py-2 bg-blue-500 hover:bg-blue-600 disabled:bg-gray-300 text-white font-semibold rounded-lg transition-colors"
                   >
-                    Guardar
+                    {guardant ? 'Guardant...' : 'Guardar'}
                   </button>
                 </div>
+                {error && (
+                  <div className="mt-2 text-sm text-red-600 text-center">
+                    {error}
+                  </div>
+                )}
               </div>
 
               {/* Botó secundari per sortir sense guardar */}

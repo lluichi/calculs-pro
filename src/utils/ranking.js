@@ -1,153 +1,128 @@
-// Gestió del ranking amb LocalStorage
+// Gestió del ranking global amb API
 
-const RANKING_KEYS = {
-  facil: 'calculs_ranking_facil',
-  mig: 'calculs_ranking_mig',
-  dificil: 'calculs_ranking_dificil',
-  expert: 'calculs_ranking_expert'
+const API_BASE = '/api/rankings';
+
+// Mapejat de nivells
+const NIVELL_MAP = {
+  facil: 'Fàcil',
+  mig: 'Mig',
+  dificil: 'Difícil',
+  expert: 'Expert'
 };
 
-const MAX_ENTRIES_PER_NIVELL = 100;
+const NIVELL_MAP_INVERS = {
+  'Fàcil': 'facil',
+  'Mig': 'mig',
+  'Difícil': 'dificil',
+  'Expert': 'expert'
+};
 
 /**
- * Genera un ID únic
- * @returns {string}
- */
-function generarId() {
-  return Date.now().toString(36) + Math.random().toString(36).substr(2);
-}
-
-/**
- * Obté el ranking d'un nivell
+ * Obté el ranking d'un nivell des de l'API
  * @param {string} nivell - facil, mig, dificil, expert
- * @returns {Array}
+ * @returns {Promise<Array>}
  */
-export function obtenirRanking(nivell) {
+export async function obtenirRanking(nivell) {
   try {
-    const key = RANKING_KEYS[nivell];
-    if (!key) return [];
+    const nivellApi = NIVELL_MAP[nivell] || nivell;
+    const response = await fetch(`${API_BASE}?nivell=${encodeURIComponent(nivellApi)}`);
 
-    const data = localStorage.getItem(key);
-    return data ? JSON.parse(data) : [];
+    if (!response.ok) {
+      throw new Error(`Error HTTP: ${response.status}`);
+    }
+
+    const data = await response.json();
+
+    // Convertir format API a format intern
+    return (data.rankings || []).map(entry => ({
+      id: entry.id,
+      nom: entry.nom,
+      puntuacio: entry.puntuacio,
+      nivell: NIVELL_MAP_INVERS[entry.nivell] || entry.nivell,
+      config: {
+        tipus: entry.tipus,
+        xifres1: entry.xifres1,
+        xifres2: entry.xifres2,
+        teDecimals: entry.decimals > 0,
+        numDecimals: entry.decimals,
+        numOperacions: entry.total
+      },
+      resultat: {
+        correctes: entry.correctes,
+        total: entry.total
+      },
+      temps: entry.temps,
+      data: entry.data
+    }));
   } catch (error) {
-    console.error('Error llegint ranking:', error);
+    console.error('Error obtenint ranking:', error);
     return [];
   }
 }
 
 /**
  * Obté tots els rankings
- * @returns {Object} { facil: [], mig: [], dificil: [], expert: [] }
+ * @returns {Promise<Object>} { facil: [], mig: [], dificil: [], expert: [] }
  */
-export function obtenirTotsRankings() {
-  return {
-    facil: obtenirRanking('facil'),
-    mig: obtenirRanking('mig'),
-    dificil: obtenirRanking('dificil'),
-    expert: obtenirRanking('expert')
-  };
+export async function obtenirTotsRankings() {
+  try {
+    // Fer les 4 crides en paral·lel
+    const [facil, mig, dificil, expert] = await Promise.all([
+      obtenirRanking('facil'),
+      obtenirRanking('mig'),
+      obtenirRanking('dificil'),
+      obtenirRanking('expert')
+    ]);
+
+    return { facil, mig, dificil, expert };
+  } catch (error) {
+    console.error('Error obtenint tots els rankings:', error);
+    return { facil: [], mig: [], dificil: [], expert: [] };
+  }
 }
 
 /**
- * Guarda una entrada al ranking
+ * Guarda una entrada al ranking global
  * @param {Object} entry - Entrada del ranking
- * @returns {Object} { posicio, esNou }
+ * @returns {Promise<Object>} { posicio, esNou }
  */
-export function guardarRanking(entry) {
+export async function guardarRanking(entry) {
   try {
-    const key = RANKING_KEYS[entry.nivell];
-    if (!key) {
-      throw new Error(`Nivell no vàlid: ${entry.nivell}`);
+    const nivellApi = NIVELL_MAP[entry.nivell] || entry.nivell;
+
+    const response = await fetch(API_BASE, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        nom: entry.nom,
+        puntuacio: entry.puntuacio,
+        nivell: nivellApi,
+        tipus: entry.config?.tipus || 'sumes',
+        correctes: entry.resultat?.correctes || 0,
+        total: entry.resultat?.total || 0,
+        temps: entry.temps || 0,
+        xifres1: entry.config?.xifres1,
+        xifres2: entry.config?.xifres2,
+        decimals: entry.config?.teDecimals ? entry.config?.numDecimals : 0
+      }),
+    });
+
+    if (!response.ok) {
+      throw new Error(`Error HTTP: ${response.status}`);
     }
 
-    // Afegir ID i data si no existeixen
-    const entryCompleta = {
-      ...entry,
-      id: entry.id || generarId(),
-      data: entry.data || new Date().toISOString()
-    };
-
-    let ranking = obtenirRanking(entry.nivell);
-
-    // Afegir la nova entrada
-    ranking.push(entryCompleta);
-
-    // Ordenar per puntuació (descendent)
-    ranking.sort((a, b) => b.puntuacio - a.puntuacio);
-
-    // Limitar a MAX_ENTRIES_PER_NIVELL
-    ranking = ranking.slice(0, MAX_ENTRIES_PER_NIVELL);
-
-    // Guardar
-    localStorage.setItem(key, JSON.stringify(ranking));
-
-    // Trobar la posició de la nova entrada
-    const posicio = ranking.findIndex(r => r.id === entryCompleta.id) + 1;
+    const data = await response.json();
 
     return {
-      posicio,
-      esNou: posicio <= MAX_ENTRIES_PER_NIVELL,
-      id: entryCompleta.id
+      posicio: data.posicio || 1,
+      esNou: true,
+      id: data.id
     };
   } catch (error) {
     console.error('Error guardant ranking:', error);
     return { posicio: -1, esNou: false, id: null };
-  }
-}
-
-/**
- * Esborra una entrada del ranking
- * @param {string} nivell - Nivell de l'entrada
- * @param {string} id - ID de l'entrada
- * @returns {boolean}
- */
-export function esborrarEntrada(nivell, id) {
-  try {
-    const key = RANKING_KEYS[nivell];
-    if (!key) return false;
-
-    let ranking = obtenirRanking(nivell);
-    ranking = ranking.filter(r => r.id !== id);
-
-    localStorage.setItem(key, JSON.stringify(ranking));
-    return true;
-  } catch (error) {
-    console.error('Error esborrant entrada:', error);
-    return false;
-  }
-}
-
-/**
- * Esborra tot el ranking d'un nivell
- * @param {string} nivell - Nivell a esborrar
- * @returns {boolean}
- */
-export function esborrarRankingNivell(nivell) {
-  try {
-    const key = RANKING_KEYS[nivell];
-    if (!key) return false;
-
-    localStorage.removeItem(key);
-    return true;
-  } catch (error) {
-    console.error('Error esborrant ranking:', error);
-    return false;
-  }
-}
-
-/**
- * Esborra tots els rankings
- * @returns {boolean}
- */
-export function esborrarTotsRankings() {
-  try {
-    Object.values(RANKING_KEYS).forEach(key => {
-      localStorage.removeItem(key);
-    });
-    return true;
-  } catch (error) {
-    console.error('Error esborrant rankings:', error);
-    return false;
   }
 }
 
@@ -165,7 +140,6 @@ export function crearEntradaRanking({
   temps
 }) {
   return {
-    id: generarId(),
     nom,
     puntuacio,
     nivell,

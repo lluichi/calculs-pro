@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { obtenirTotsRankings, esborrarEntrada } from '../utils/ranking';
+import { obtenirTotsRankings } from '../utils/ranking';
 import { formatarTemps, getNomTipus } from '../utils/scoring';
 
 const NIVELLS = [
@@ -9,7 +9,7 @@ const NIVELLS = [
   { key: 'expert', emoji: '🔴', text: 'Expert' }
 ];
 
-function RankingEntry({ entry, posicio, onEsborrar }) {
+function RankingEntry({ entry, posicio }) {
   const medalles = ['🥇', '🥈', '🥉'];
   const medalla = posicio <= 3 ? medalles[posicio - 1] : null;
 
@@ -45,30 +45,19 @@ function RankingEntry({ entry, posicio, onEsborrar }) {
             </span>
           </div>
           <div className="text-xs text-gray-500 mt-1">
-            {getNomTipus(entry.config.tipus)} |{' '}
-            {entry.config.tipus === 'arrels'
-              ? `${entry.config.xifres1} xifres`
-              : `${entry.config.xifres1}×${entry.config.xifres2} xifres`
+            {getNomTipus(entry.config?.tipus || 'sumes')} |{' '}
+            {entry.config?.tipus === 'arrels'
+              ? `${entry.config?.xifres1 || 1} xifres`
+              : `${entry.config?.xifres1 || 1}×${entry.config?.xifres2 || 1} xifres`
             }
-            {entry.config.teDecimals && ` | ${entry.config.numDecimals} dec.`}
+            {entry.config?.teDecimals && ` | ${entry.config?.numDecimals} dec.`}
           </div>
           <div className="text-xs text-gray-400 mt-0.5">
-            {entry.resultat.correctes}/{entry.resultat.total} |{' '}
-            {formatarTemps(entry.temps)} |{' '}
-            {formatData(entry.data)}
+            {entry.resultat?.correctes || 0}/{entry.resultat?.total || 0} |{' '}
+            {formatarTemps(entry.temps || 0)} |{' '}
+            {entry.data ? formatData(entry.data) : '-'}
           </div>
         </div>
-
-        {/* Botó esborrar */}
-        <button
-          onClick={() => onEsborrar(entry)}
-          className="p-1 text-gray-400 hover:text-red-500 transition-colors"
-          title="Esborrar"
-        >
-          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-          </svg>
-        </button>
       </div>
     </div>
   );
@@ -77,18 +66,27 @@ function RankingEntry({ entry, posicio, onEsborrar }) {
 function RankingModal({ onTancar, nivellInicial = 'facil' }) {
   const [nivellActiu, setNivellActiu] = useState(nivellInicial);
   const [rankings, setRankings] = useState({});
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   // Carregar rankings
   useEffect(() => {
-    setRankings(obtenirTotsRankings());
-  }, []);
+    const carregarRankings = async () => {
+      setLoading(true);
+      setError(null);
+      try {
+        const data = await obtenirTotsRankings();
+        setRankings(data);
+      } catch (err) {
+        console.error('Error carregant rankings:', err);
+        setError('No s\'han pogut carregar els rankings');
+      } finally {
+        setLoading(false);
+      }
+    };
 
-  const handleEsborrar = (entry) => {
-    if (window.confirm(`Vols esborrar la puntuació de ${entry.nom}?`)) {
-      esborrarEntrada(entry.nivell, entry.id);
-      setRankings(obtenirTotsRankings());
-    }
-  };
+    carregarRankings();
+  }, []);
 
   const rankingActual = rankings[nivellActiu] || [];
 
@@ -98,7 +96,7 @@ function RankingModal({ onTancar, nivellInicial = 'facil' }) {
         {/* Capçalera */}
         <div className="flex-shrink-0 border-b border-gray-200 px-6 py-4">
           <h2 className="text-xl font-bold text-gray-800 flex items-center gap-2">
-            <span>🏆</span> Ranking
+            <span>🏆</span> Ranking Global
           </h2>
         </div>
 
@@ -124,7 +122,17 @@ function RankingModal({ onTancar, nivellInicial = 'facil' }) {
 
         {/* Llista de ranking */}
         <div className="flex-1 overflow-auto p-4">
-          {rankingActual.length === 0 ? (
+          {loading ? (
+            <div className="text-center py-12 text-gray-500">
+              <div className="text-4xl mb-3 animate-pulse">⏳</div>
+              <p>Carregant rankings...</p>
+            </div>
+          ) : error ? (
+            <div className="text-center py-12 text-red-500">
+              <div className="text-4xl mb-3">⚠️</div>
+              <p>{error}</p>
+            </div>
+          ) : rankingActual.length === 0 ? (
             <div className="text-center py-12 text-gray-500">
               <div className="text-4xl mb-3">📊</div>
               <p>Encara no hi ha puntuacions</p>
@@ -137,7 +145,6 @@ function RankingModal({ onTancar, nivellInicial = 'facil' }) {
                   key={entry.id}
                   entry={entry}
                   posicio={index + 1}
-                  onEsborrar={handleEsborrar}
                 />
               ))}
             </div>

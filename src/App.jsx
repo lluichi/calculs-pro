@@ -21,6 +21,35 @@ const CONFIG_DEFAULT = {
   numOperacions: 10
 };
 
+// Clau per localStorage
+const CONFIG_STORAGE_KEY = 'calculs-pro-config';
+
+// Carregar configuració guardada
+function carregarConfigGuardada() {
+  try {
+    const saved = localStorage.getItem(CONFIG_STORAGE_KEY);
+    if (saved) {
+      const parsed = JSON.parse(saved);
+      // Validar que té totes les propietats necessàries
+      if (parsed.tipus && parsed.xifres1 && parsed.numOperacions) {
+        return { ...CONFIG_DEFAULT, ...parsed };
+      }
+    }
+  } catch (e) {
+    console.warn('Error carregant configuració guardada:', e);
+  }
+  return CONFIG_DEFAULT;
+}
+
+// Guardar configuració
+function guardarConfig(config) {
+  try {
+    localStorage.setItem(CONFIG_STORAGE_KEY, JSON.stringify(config));
+  } catch (e) {
+    console.warn('Error guardant configuració:', e);
+  }
+}
+
 // Estats de l'aplicació
 const AppState = {
   INICIAL: 'inicial',
@@ -30,8 +59,8 @@ const AppState = {
 };
 
 function App() {
-  // Estat de la configuració
-  const [config, setConfig] = useState(CONFIG_DEFAULT);
+  // Estat de la configuració (carrega de localStorage si existeix)
+  const [config, setConfig] = useState(carregarConfigGuardada);
 
   // Estat del joc
   const [appState, setAppState] = useState(AppState.INICIAL);
@@ -65,6 +94,11 @@ function App() {
       if (interval) clearInterval(interval);
     };
   }, [tempsActiu]);
+
+  // Guardar configuració a localStorage quan canvia
+  useEffect(() => {
+    guardarConfig(config);
+  }, [config]);
 
   // Generar noves operacions
   const handleGenerar = useCallback(() => {
@@ -136,8 +170,8 @@ function App() {
     setResultat(null);
   }, []);
 
-  // Guardar al ranking
-  const handleGuardarRanking = useCallback((nom) => {
+  // Guardar al ranking (ara és async)
+  const handleGuardarRanking = useCallback(async (nom) => {
     if (!resultat || !nom.trim()) return null;
 
     const entrada = crearEntradaRanking({
@@ -152,7 +186,7 @@ function App() {
       temps: resultat.temps
     });
 
-    const { posicio } = guardarRanking(entrada);
+    const { posicio } = await guardarRanking(entrada);
     return posicio;
   }, [resultat, config]);
 
