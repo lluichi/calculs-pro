@@ -43,7 +43,9 @@ function ResultModal({ resultat, nivell, config, onGuardar, onTancar, onVeureRan
       }
     } catch (err) {
       console.error('Error guardant:', err);
-      setError('Error de connexió. Torna-ho a provar.');
+      // Mostrar el missatge d'error real si existeix
+      const errorMsg = err.message || 'Error de connexió';
+      setError(`${errorMsg}. Torna-ho a provar.`);
     } finally {
       setGuardant(false);
     }

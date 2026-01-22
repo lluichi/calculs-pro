@@ -19,6 +19,21 @@ export async function onRequestGet(context) {
   const url = new URL(request.url);
   const nivell = url.searchParams.get('nivell');
 
+  // Verificar que D1 està configurat
+  if (!env.DB) {
+    console.error('D1 database binding (DB) not configured');
+    return new Response(JSON.stringify({
+      error: 'Base de dades no configurada',
+      details: 'D1 binding missing'
+    }), {
+      status: 503,
+      headers: {
+        'Content-Type': 'application/json',
+        ...CORS_HEADERS,
+      },
+    });
+  }
+
   try {
     let query;
     let params = [];
@@ -58,7 +73,10 @@ export async function onRequestGet(context) {
     });
   } catch (error) {
     console.error('Error obtenint rankings:', error);
-    return new Response(JSON.stringify({ error: 'Error obtenint rankings' }), {
+    return new Response(JSON.stringify({
+      error: 'Error obtenint rankings',
+      details: error.message || String(error)
+    }), {
       status: 500,
       headers: {
         'Content-Type': 'application/json',
@@ -73,6 +91,21 @@ export async function onRequestPost(context) {
   const { env, request } = context;
 
   try {
+    // Verificar que D1 està configurat
+    if (!env.DB) {
+      console.error('D1 database binding (DB) not configured');
+      return new Response(JSON.stringify({
+        error: 'Base de dades no configurada',
+        details: 'D1 binding missing'
+      }), {
+        status: 503,
+        headers: {
+          'Content-Type': 'application/json',
+          ...CORS_HEADERS,
+        },
+      });
+    }
+
     const body = await request.json();
     const { nom, puntuacio, nivell, tipus, correctes, total, temps, xifres1, xifres2, decimals } = body;
 
@@ -137,7 +170,10 @@ export async function onRequestPost(context) {
     });
   } catch (error) {
     console.error('Error guardant ranking:', error);
-    return new Response(JSON.stringify({ error: 'Error guardant ranking' }), {
+    return new Response(JSON.stringify({
+      error: 'Error guardant ranking',
+      details: error.message || String(error)
+    }), {
       status: 500,
       headers: {
         'Content-Type': 'application/json',

@@ -109,11 +109,12 @@ export async function guardarRanking(entry) {
       }),
     });
 
-    if (!response.ok) {
-      throw new Error(`Error HTTP: ${response.status}`);
-    }
-
     const data = await response.json();
+
+    if (!response.ok) {
+      const errorMsg = data.details || data.error || `Error HTTP: ${response.status}`;
+      throw new Error(errorMsg);
+    }
 
     return {
       posicio: data.posicio || 1,
@@ -122,7 +123,7 @@ export async function guardarRanking(entry) {
     };
   } catch (error) {
     console.error('Error guardant ranking:', error);
-    return { posicio: -1, esNou: false, id: null };
+    throw error; // Re-llançar per permetre gestió a nivell de UI
   }
 }
 
