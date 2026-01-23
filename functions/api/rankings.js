@@ -71,9 +71,10 @@ export async function onRequestGet(context) {
 // POST /api/rankings
 export async function onRequestPost(context) {
   const { env, request } = context;
+  let body = null;
 
   try {
-    const body = await request.json();
+    body = await request.json();
     const { nom, puntuacio, nivell, tipus, correctes, total, temps, xifres1, xifres2, decimals } = body;
 
     // Validació bàsica
@@ -141,7 +142,7 @@ export async function onRequestPost(context) {
       stack: error.stack,
       name: error.name,
       cause: error.cause,
-      body: { nom, puntuacio, nivell, tipus, correctes, total, temps, xifres1, xifres2, decimals },
+      body: body,
       dbAvailable: !!env.DB
     });
     return new Response(JSON.stringify({
