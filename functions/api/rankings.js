@@ -136,8 +136,18 @@ export async function onRequestPost(context) {
       },
     });
   } catch (error) {
-    console.error('Error guardant ranking:', error);
-    return new Response(JSON.stringify({ error: 'Error guardant ranking' }), {
+    console.error('Error guardant ranking:', {
+      message: error.message,
+      stack: error.stack,
+      name: error.name,
+      cause: error.cause,
+      body: { nom, puntuacio, nivell, tipus, correctes, total, temps, xifres1, xifres2, decimals },
+      dbAvailable: !!env.DB
+    });
+    return new Response(JSON.stringify({
+      error: 'Error guardant ranking',
+      details: error.message
+    }), {
       status: 500,
       headers: {
         'Content-Type': 'application/json',
