@@ -101,8 +101,8 @@ export async function onRequestPost(context) {
 
     // Inserir nou ranking
     const result = await env.DB.prepare(`
-      INSERT INTO rankings (nom, puntuacio, nivell, tipus, correctes, total, temps, xifres1, xifres2, decimals)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      INSERT INTO rankings (nom, puntuacio, nivell, tipus, correctes, total, temps, xifres1, xifres2, decimals, data)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'))
     `).bind(
       nom.substring(0, 50), // Limitar nom a 50 caràcters
       Math.floor(puntuacio),
