@@ -71,10 +71,10 @@ function ConfigPanel({ config, onAplicar, onCancelar, onGenerar }) {
             </select>
           </div>
 
-          {/* Xifres primer número */}
+          {/* Xifres màximes primer número */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Xifres {esArrel ? 'del radicand' : 'primer número'}
+              Xifres màximes {esArrel ? 'del radicand' : 'del primer número'}
             </label>
             <select
               value={localConfig.xifres1}
@@ -87,11 +87,11 @@ function ConfigPanel({ config, onAplicar, onCancelar, onGenerar }) {
             </select>
           </div>
 
-          {/* Xifres segon número (no per arrels) */}
+          {/* Xifres màximes segon número (no per arrels) */}
           {!esArrel && (
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Xifres segon número
+                Xifres màximes del segon número
               </label>
               <select
                 value={localConfig.xifres2}

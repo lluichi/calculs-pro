@@ -37,7 +37,7 @@ function HelpModal({ onTancar }) {
                   <span className="text-gray-600"> (botó ☰):</span>
                   <ul className="mt-1 text-sm text-gray-600 list-disc list-inside">
                     <li>Escull el tipus d'operació</li>
-                    <li>Tria quantes xifres vols als números</li>
+                    <li>Tria el màxim de xifres dels números</li>
                     <li>Decideix si vols decimals</li>
                     <li>Escull quantes operacions vols fer</li>
                   </ul>

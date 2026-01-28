@@ -22,13 +22,13 @@ function generarQuadratsPerfectes(min, max) {
 }
 
 /**
- * Genera un número aleatori amb les xifres i decimals especificats
- * @param {number} xifres - Nombre de xifres (1-5)
+ * Genera un número aleatori amb un màxim de xifres i decimals especificats
+ * @param {number} xifres - Nombre màxim de xifres (1-5)
  * @param {number} decimals - Nombre de decimals (0-3)
  * @returns {number}
  */
 export function generarNumero(xifres, decimals = 0) {
-  const min = Math.pow(10, xifres - 1);
+  const min = 1;
   const max = Math.pow(10, xifres) - 1;
 
   let numero = Math.floor(Math.random() * (max - min + 1)) + min;
@@ -120,12 +120,12 @@ function generarDivisio(xifres1, xifres2, decimalsResultat) {
 }
 
 /**
- * Obté els quadrats perfectes disponibles per un nombre de xifres
- * @param {number} xifres - Xifres del radicand
+ * Obté els quadrats perfectes disponibles fins a un màxim de xifres
+ * @param {number} xifres - Nombre màxim de xifres del radicand
  * @returns {Array} Array de quadrats perfectes
  */
 export function obtenirQuadratsPerfectes(xifres) {
-  const min = xifres === 1 ? 1 : Math.pow(10, xifres - 1);
+  const min = 1;
   const max = Math.pow(10, xifres) - 1;
   return generarQuadratsPerfectes(min, max);
 }
